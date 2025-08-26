@@ -18,8 +18,7 @@ thiserror = "2"
 
 [dev-dependencies]
 tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros"] }
-smol = "2"
-futures = { version = "0.3", features = ["executor", "thread-pool"] }
+futures = { version = "0.3", features = ["executor"] }
 
 [[example]]
 name = "stream"
