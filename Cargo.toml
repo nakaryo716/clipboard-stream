@@ -1,0 +1,22 @@
+[package]
+name = "clipboard-stream"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+futures = "0.3"
+objc2-app-kit = "0.3"
+thiserror = "2"
+
+[dev-dependencies]
+tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros"] }
+smol = "2"
+futures = { version = "0.3", features = ["executor", "thread-pool"]}
+
+[[example]]
+name = "stream"
+path = "examples/stream.rs"
+
+[[example]]
+name = "try-stream"
+path = "examples/try_stream.rs"
