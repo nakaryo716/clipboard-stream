@@ -2,6 +2,14 @@
 name = "clipboard-stream"
 version = "0.1.0"
 edition = "2024"
+readme = "README.md"
+repository = "https://github.com/nakaryo716/clipboard-stream" 
+license = "MIT" 
+description = """
+Async stream of clipboard change events
+"""
+documentation = "https://docs.rs/clipboard-stream" 
+keywords = ["clipboard"]
 
 [dependencies]
 futures = "0.3"
@@ -11,7 +19,7 @@ thiserror = "2"
 [dev-dependencies]
 tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros"] }
 smol = "2"
-futures = { version = "0.3", features = ["executor", "thread-pool"]}
+futures = { version = "0.3", features = ["executor", "thread-pool"] }
 
 [[example]]
 name = "stream"
