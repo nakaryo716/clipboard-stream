@@ -11,6 +11,10 @@ Async stream of clipboard change events
 documentation = "https://docs.rs/clipboard-stream" 
 keywords = ["clipboard"]
 
+[package.metadata.docs.rs]
+default-target = "aarch64-apple-darwin"
+targets = ["aarch64-apple-darwin"]
+
 [dependencies]
 futures = "0.3"
 objc2-app-kit = "0.3"
