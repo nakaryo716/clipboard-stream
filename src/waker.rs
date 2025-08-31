@@ -27,7 +27,7 @@ impl WakerHandle {
         WakerHandle(wakers)
     }
 
-    pub(crate) fn regist(&self, kind: Kind, waker: Waker) {
+    pub(crate) fn register(&self, kind: Kind, waker: Waker) {
         let mut gurad = self.0.lock().unwrap();
         gurad.wakers.insert(kind, waker);
     }
@@ -52,11 +52,11 @@ mod tests {
 
         let waker_cl = waker.clone();
         let t1 = std::thread::spawn(move || {
-            handle_one.regist(Kind::Utf8, waker_cl);
+            handle_one.register(Kind::Utf8, waker_cl);
         });
 
         let t2 = std::thread::spawn(move || {
-            handle_two.regist(Kind::Img, waker);
+            handle_two.register(Kind::Img, waker);
         });
 
         t1.join().unwrap();
