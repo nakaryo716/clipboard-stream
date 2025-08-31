@@ -37,6 +37,7 @@
 //!
 //! [`Stream`]: https://docs.rs/futures/latest/futures/stream/trait.Stream.html
 //! [`ClipboardSream`]: crate::stream::ClipboardStream
+mod body;
 mod driver;
 mod error;
 mod stream;
