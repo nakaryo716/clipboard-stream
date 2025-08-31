@@ -42,6 +42,7 @@ mod driver;
 mod error;
 mod stream;
 mod sys;
+mod waker;
 
 pub use crate::error::Error;
 pub use crate::stream::ClipboardStream;
