@@ -17,6 +17,10 @@ impl WakersMap {
             wakers: HashMap::new(),
         }))
     }
+
+    pub(crate) fn get_waker(&mut self, kind: Kind) -> Option<&Waker> {
+        self.wakers.get(&kind)
+    }
 }
 
 #[derive(Debug)]
