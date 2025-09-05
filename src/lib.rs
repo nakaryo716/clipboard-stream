@@ -37,12 +37,14 @@
 //!
 //! [`Stream`]: https://docs.rs/futures/latest/futures/stream/trait.Stream.html
 //! [`ClipboardSream`]: crate::stream::ClipboardStream
-mod body;
-mod driver;
-mod error;
-mod stream;
-mod sys;
-mod waker;
+pub mod body;
+pub mod buffer;
+pub mod driver;
+pub mod error;
+pub mod event_listener;
+pub mod stream;
+pub mod sys;
+pub mod waker;
 
 pub use crate::error::Error;
 pub use crate::stream::ClipboardStream;
