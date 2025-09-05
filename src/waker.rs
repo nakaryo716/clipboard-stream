@@ -23,7 +23,7 @@ impl WakersMap {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub(crate) struct WakerHandle(Arc<Mutex<WakersMap>>);
 
 impl WakerHandle {
