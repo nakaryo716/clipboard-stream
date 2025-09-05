@@ -1,11 +1,14 @@
 use std::{
-    pin::Pin,
-    task::{Context, Poll},
+    pin::Pin, sync::{Arc, Mutex}, task::{Context, Poll}
 };
 
-use futures::{Stream, ready};
+use futures::{ready, Stream};
 
-use crate::{driver::Driver, sys::OSXSys};
+use crate::{
+    body::{Body, Kind},
+    buffer::BufferReceiver,
+    waker::WakerHandle,
+};
 
 /// Asynchronous stream for fetching clipboard item.
 ///
@@ -30,33 +33,44 @@ use crate::{driver::Driver, sys::OSXSys};
 /// ```
 #[derive(Debug)]
 pub struct ClipboardStream {
-    driver: Driver,
+    waker_handle: WakerHandle,
+    data: Arc<Mutex<BufferReceiver>>,
+    kind: Kind,
 }
 
 impl ClipboardStream {
-    pub fn new() -> Self {
-        #[cfg(target_os = "macos")]
-        let sys = OSXSys;
-
+    pub(crate) fn new(waker_handle: WakerHandle, data: Arc<Mutex<BufferReceiver>>, kind: Kind) -> Self {
         ClipboardStream {
-            driver: Driver::new(sys),
+            waker_handle,
+            data,
+            kind,
         }
     }
 }
 
-impl Default for ClipboardStream {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl Stream for ClipboardStream {
-    type Item = Result<String, crate::error::Error>;
+    type Item = Result<Body, crate::error::Error>;
 
-    fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
-        match ready!(self.driver.poll_clipboard(cx)) {
-            Ok(v) => Poll::Ready(Some(Ok(v))),
-            Err(e) => Poll::Ready(Some(Err(e))),
+    fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
+        println!("polled");
+        match self.kind {
+            Kind::Utf8 => {
+                self.waker_handle.register(self.kind.clone(),cx.waker().clone());
+                if let Ok(Some(v)) = self.data.lock().unwrap().next_utf8() {
+                    return Poll::Ready(Some(Ok(Body::Utf8(v))));
+                }
+                self.waker_handle
+                    .register(self.kind.clone(), cx.waker().clone());
+                Poll::Pending
+            }
+            Kind::Img => {
+                if let Ok(Some(v)) = self.data.lock().unwrap().next_img() {
+                    return Poll::Ready(Some(Ok(Body::Img(v))));
+                }
+                self.waker_handle
+                    .register(self.kind.clone(), cx.waker().clone());
+                Poll::Pending
+            }
         }
     }
 }
