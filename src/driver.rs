@@ -1,53 +1,36 @@
 use std::{
-    collections::VecDeque,
     sync::{
-        Arc, Mutex,
-        atomic::{AtomicBool, Ordering},
-    },
-    task::{Context, Poll},
-    thread::JoinHandle,
-    time,
+        atomic::{AtomicBool, Ordering}, Arc, Mutex
+    },  thread::JoinHandle, time::Duration
 };
 
-use futures::task::AtomicWaker;
-
-use crate::sys::ClipBoardSys;
+use crate::{
+    body::Kind,
+    buffer::BufferSender,
+    sys::{ClipBoardSys, OSXSys},
+    waker::WakersMap,
+};
 
 /// An event driver that monitors clipboard updates and notify
 #[derive(Debug)]
 pub(crate) struct Driver {
-    queue: Arc<Mutex<VecDeque<Result<String, crate::error::Error>>>>,
-    waker: Arc<AtomicWaker>,
-    stop: Arc<AtomicBool>,
+    flag: Arc<AtomicBool>,
     handle: Option<JoinHandle<()>>,
 }
 
 impl Driver {
-    /// Construct [`Driver`] and spawn a thread for monitoring clipboard events
-    pub(crate) fn new<S>(sys: S) -> Self
-    where
-        S: ClipBoardSys + Send + 'static,
-    {
-        let queue = Arc::new(Mutex::new(VecDeque::new()));
-        let waker = Arc::new(AtomicWaker::new());
-        let stop = Arc::new(AtomicBool::new(false));
+    pub(crate) fn new(mut wakers: Arc<Mutex<WakersMap>>, mut buffer_handle: BufferSender) -> Self {
+        let flag = Arc::new(AtomicBool::new(false));
 
-        let queue_cl = queue.clone();
-        let stop_cl = stop.clone();
-        let waker_cl = waker.clone();
-
+        let flag_cl = flag.clone();
         let handle = std::thread::spawn(move || {
+            let mut sys = OSXSys;
             let mut last_count = None;
-
-            let mut sys = sys;
-            while !stop_cl.load(Ordering::Relaxed) {
-                std::thread::sleep(time::Duration::from_millis(200));
+            while !flag_cl.load(Ordering::Relaxed) {
+                std::thread::sleep(Duration::from_millis(200));
                 let change_count = match sys.get_change_count() {
                     Ok(c) => c,
                     Err(e) => {
-                        let mut queue = queue_cl.lock().unwrap();
-                        queue.push_back(Err(e));
-                        waker_cl.wake();
                         continue;
                     }
                 };
@@ -55,58 +38,21 @@ impl Driver {
                 if Some(change_count) == last_count {
                     continue;
                 }
-                last_count = Some(change_count);
 
+                last_count = Some(change_count);
                 match sys.get_item() {
-                    Ok(item) => {
-                        let mut queue = queue_cl.lock().unwrap();
-                        queue.push_back(Ok(item));
-                        waker_cl.wake();
+                    Ok(v) => {
+                        buffer_handle.utf8_tx.try_send(v).unwrap();
+                        wakers.lock().unwrap().get_waker(Kind::Utf8).unwrap().wake_by_ref();
                     }
-                    Err(e) => {
-                        let mut queue = queue_cl.lock().unwrap();
-                        queue.push_back(Err(e));
-                        waker_cl.wake();
-                    }
+                    Err(e) => {}
                 }
             }
         });
 
         Driver {
-            queue,
-            waker,
-            stop,
+            flag,
             handle: Some(handle),
-        }
-    }
-
-    /// Poll clipboard item
-    /// When clipboard is updated, will return Poll::Ready
-    pub(crate) fn poll_clipboard(
-        &mut self,
-        cx: &mut Context<'_>,
-    ) -> Poll<Result<String, crate::error::Error>> {
-        if let Some(v) = self.queue.lock().unwrap().pop_front() {
-            return Poll::Ready(v);
-        }
-
-        self.waker.register(cx.waker());
-
-        let mut queue = self.queue.lock().unwrap();
-        let data = queue.pop_front();
-
-        match data {
-            Some(v) => Poll::Ready(v),
-            None => Poll::Pending,
-        }
-    }
-}
-
-impl Drop for Driver {
-    fn drop(&mut self) {
-        self.stop.store(true, Ordering::Relaxed);
-        if let Some(handle) = self.handle.take() {
-            handle.join().unwrap();
         }
     }
 }
