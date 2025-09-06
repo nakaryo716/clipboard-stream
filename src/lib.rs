@@ -44,7 +44,6 @@ pub mod error;
 pub mod event_listener;
 pub mod stream;
 pub mod sys;
-pub mod waker;
 
 pub use crate::error::Error;
 pub use crate::stream::ClipboardStream;
