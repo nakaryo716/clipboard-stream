@@ -2,7 +2,7 @@
 //!
 //! Provides real-time clipboard monitoring through an async [`Stream`] interface.
 //!
-//! The main part of this crate is [`ClipboardSream`].  
+//! The main part of this crate is [`ClipboardSream`].
 //! This struct implements [`Stream`].
 //!
 //! # Example
@@ -25,7 +25,7 @@
 //! ```
 //!
 //! # Runtime
-//! Internally, this crate spawns a small dedicated OS thread to listen for clipboard events.  
+//! Internally, this crate spawns a small dedicated OS thread to listen for clipboard events.
 //! The API itself is `Future`-based and does not depend on any specific async runtime,
 //! so it works with [`tokio`](https://docs.rs/tokio), [`smol`](https://docs.rs/smol), or any runtime compatible with
 //! [`futures`](https://docs.rs/futures).
@@ -37,6 +37,7 @@
 //!
 //! [`Stream`]: https://docs.rs/futures/latest/futures/stream/trait.Stream.html
 //! [`ClipboardSream`]: crate::stream::ClipboardStream
+mod body;
 mod driver;
 mod error;
 mod stream;
