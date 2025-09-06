@@ -1,14 +1,16 @@
 use std::{
     sync::{
-        atomic::{AtomicBool, Ordering}, Arc, Mutex
-    },  thread::JoinHandle, time::Duration
+        Arc,
+        atomic::{AtomicBool, Ordering},
+    },
+    thread::JoinHandle,
+    time::Duration,
 };
 
 use crate::{
-    body::Kind,
+    body::Body,
     buffer::BufferSender,
     sys::{ClipBoardSys, OSXSys},
-    waker::WakersMap,
 };
 
 /// An event driver that monitors clipboard updates and notify
@@ -19,7 +21,7 @@ pub(crate) struct Driver {
 }
 
 impl Driver {
-    pub(crate) fn new(mut wakers: Arc<Mutex<WakersMap>>, mut buffer_handle: BufferSender) -> Self {
+    pub(crate) fn new(mut buffer_handle: BufferSender) -> Self {
         let flag = Arc::new(AtomicBool::new(false));
 
         let flag_cl = flag.clone();
@@ -42,8 +44,8 @@ impl Driver {
                 last_count = Some(change_count);
                 match sys.get_item() {
                     Ok(v) => {
-                        buffer_handle.utf8_tx.try_send(v).unwrap();
-                        wakers.lock().unwrap().get_waker(Kind::Utf8).unwrap().wake_by_ref();
+                        let data = Ok(Body::Utf8(v));
+                        buffer_handle.utf8_tx.try_send(data).unwrap();
                     }
                     Err(e) => {}
                 }
