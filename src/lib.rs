@@ -45,3 +45,6 @@ mod sys;
 
 pub use crate::error::Error;
 pub use crate::stream::ClipboardStream;
+pub use body::{Body, Kind};
+
+pub(crate) type Msg = Result<Body, crate::error::Error>;
