@@ -3,9 +3,12 @@ use std::{
     task::{Context, Poll},
 };
 
-use futures::{Stream, ready};
+use futures::{Stream, channel::mpsc::Receiver};
 
-use crate::{driver::Driver, sys::OSXSys};
+use crate::{
+    Msg,
+    body::{Body, Kind},
+};
 
 /// Asynchronous stream for fetching clipboard item.
 ///
@@ -30,33 +33,23 @@ use crate::{driver::Driver, sys::OSXSys};
 /// ```
 #[derive(Debug)]
 pub struct ClipboardStream {
-    driver: Driver,
+    body_rx: Pin<Box<Receiver<Msg>>>,
+    kind: Kind,
 }
 
 impl ClipboardStream {
-    pub fn new() -> Self {
-        #[cfg(target_os = "macos")]
-        let sys = OSXSys;
-
+    pub fn new(body_rx: Receiver<Msg>, kind: Kind) -> Self {
         ClipboardStream {
-            driver: Driver::new(sys),
+            body_rx: Box::pin(body_rx),
+            kind,
         }
-    }
-}
-
-impl Default for ClipboardStream {
-    fn default() -> Self {
-        Self::new()
     }
 }
 
 impl Stream for ClipboardStream {
-    type Item = Result<String, crate::error::Error>;
+    type Item = Result<Body, crate::error::Error>;
 
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
-        match ready!(self.driver.poll_clipboard(cx)) {
-            Ok(v) => Poll::Ready(Some(Ok(v))),
-            Err(e) => Poll::Ready(Some(Err(e))),
-        }
+        self.body_rx.as_mut().poll_next(cx)
     }
 }
