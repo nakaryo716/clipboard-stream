@@ -7,13 +7,13 @@ use futures::{Stream, channel::mpsc::Receiver};
 
 use crate::{
     Msg,
-    body::{Body, Kind},
+    body::{Body, BodySendersDropHandle, Kind},
 };
 
 /// Asynchronous stream for fetching clipboard item.
 ///
-/// When the clipboard is updated, the [`ClipboardStream`] polls for the yields the new data.  
-/// The return type is `Result<String>`. Other data formats are not **yet** supported.  
+/// When the clipboard is updated, the [`ClipboardStream`] polls for the yields the new data.
+/// The return type is `Result<String>`. Other data formats are not **yet** supported.
 ///
 /// # Example
 /// ```no_run
@@ -33,17 +33,9 @@ use crate::{
 /// ```
 #[derive(Debug)]
 pub struct ClipboardStream {
-    body_rx: Pin<Box<Receiver<Msg>>>,
-    kind: Kind,
-}
-
-impl ClipboardStream {
-    pub fn new(body_rx: Receiver<Msg>, kind: Kind) -> Self {
-        ClipboardStream {
-            body_rx: Box::pin(body_rx),
-            kind,
-        }
-    }
+    pub(crate) body_rx: Pin<Box<Receiver<Msg>>>,
+    pub(crate) kind: Kind,
+    pub(crate) drop_handle: BodySendersDropHandle,
 }
 
 impl Stream for ClipboardStream {
