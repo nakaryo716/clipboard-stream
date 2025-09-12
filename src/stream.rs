@@ -45,3 +45,9 @@ impl Stream for ClipboardStream {
         self.body_rx.as_mut().poll_next(cx)
     }
 }
+
+impl Drop for ClipboardStream {
+    fn drop(&mut self) {
+        self.drop_handle.delete_sender(&self.kind);
+    }
+}
