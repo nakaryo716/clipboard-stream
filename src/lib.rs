@@ -40,11 +40,13 @@
 mod body;
 mod driver;
 mod error;
+mod event_listener;
 mod stream;
 mod sys;
 
+pub use crate::body::{Body, Kind};
 pub use crate::error::Error;
+pub use crate::event_listener::ClipboadEventListener;
 pub use crate::stream::ClipboardStream;
-pub use body::{Body, Kind};
 
 pub(crate) type Msg = Result<Body, crate::error::Error>;
