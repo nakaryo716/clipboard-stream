@@ -1,53 +1,43 @@
 use std::{
-    collections::VecDeque,
     sync::{
         Arc, Mutex,
         atomic::{AtomicBool, Ordering},
     },
-    task::{Context, Poll},
     thread::JoinHandle,
     time,
 };
 
-use futures::task::AtomicWaker;
-
-use crate::sys::ClipBoardSys;
+use crate::{
+    Kind,
+    body::{Body, BodySenders},
+    sys::{ClipBoardSys, OSXSys},
+};
 
 /// An event driver that monitors clipboard updates and notify
 #[derive(Debug)]
 pub(crate) struct Driver {
-    queue: Arc<Mutex<VecDeque<Result<String, crate::error::Error>>>>,
-    waker: Arc<AtomicWaker>,
     stop: Arc<AtomicBool>,
     handle: Option<JoinHandle<()>>,
 }
 
 impl Driver {
     /// Construct [`Driver`] and spawn a thread for monitoring clipboard events
-    pub(crate) fn new<S>(sys: S) -> Self
-    where
-        S: ClipBoardSys + Send + 'static,
-    {
-        let queue = Arc::new(Mutex::new(VecDeque::new()));
-        let waker = Arc::new(AtomicWaker::new());
+    pub(crate) fn new(body_senders: Arc<Mutex<BodySenders>>) -> Self {
         let stop = Arc::new(AtomicBool::new(false));
 
-        let queue_cl = queue.clone();
         let stop_cl = stop.clone();
-        let waker_cl = waker.clone();
 
         let handle = std::thread::spawn(move || {
             let mut last_count = None;
 
-            let mut sys = sys;
+            let mut sys = OSXSys;
             while !stop_cl.load(Ordering::Relaxed) {
                 std::thread::sleep(time::Duration::from_millis(200));
                 let change_count = match sys.get_change_count() {
                     Ok(c) => c,
-                    Err(e) => {
-                        let mut queue = queue_cl.lock().unwrap();
-                        queue.push_back(Err(e));
-                        waker_cl.wake();
+                    Err(_) => {
+                        let mut gurad = body_senders.lock().unwrap();
+                        gurad.send_all_if_some(Err(crate::error::Error::GetItem));
                         continue;
                     }
                 };
@@ -59,45 +49,27 @@ impl Driver {
 
                 match sys.get_item() {
                     Ok(item) => {
-                        let mut queue = queue_cl.lock().unwrap();
-                        queue.push_back(Ok(item));
-                        waker_cl.wake();
+                        let mut gurad = body_senders.lock().unwrap();
+                        let body = Ok(Body::Utf8String(item));
+                        if let Err(e) = gurad.try_send_if_some(body, &Kind::Utf8String) {
+                            eprintln!("{}", e);
+                        }
                     }
-                    Err(e) => {
-                        let mut queue = queue_cl.lock().unwrap();
-                        queue.push_back(Err(e));
-                        waker_cl.wake();
+                    Err(_) => {
+                        let mut gurad = body_senders.lock().unwrap();
+                        if let Err(e) = gurad
+                            .try_send_if_some(Err(crate::error::Error::GetItem), &Kind::Utf8String)
+                        {
+                            eprintln!("{}", e);
+                        }
                     }
                 }
             }
         });
 
         Driver {
-            queue,
-            waker,
             stop,
             handle: Some(handle),
-        }
-    }
-
-    /// Poll clipboard item
-    /// When clipboard is updated, will return Poll::Ready
-    pub(crate) fn poll_clipboard(
-        &mut self,
-        cx: &mut Context<'_>,
-    ) -> Poll<Result<String, crate::error::Error>> {
-        if let Some(v) = self.queue.lock().unwrap().pop_front() {
-            return Poll::Ready(v);
-        }
-
-        self.waker.register(cx.waker());
-
-        let mut queue = self.queue.lock().unwrap();
-        let data = queue.pop_front();
-
-        match data {
-            Some(v) => Poll::Ready(v),
-            None => Poll::Pending,
         }
     }
 }
