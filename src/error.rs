@@ -12,4 +12,6 @@ pub enum Error {
     /// Error occurred while system call
     #[error("failed to get item")]
     GetItem,
+    #[error("same kind of stream is already exists")]
+    StreamAlreadyExists,
 }

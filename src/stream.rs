@@ -3,14 +3,17 @@ use std::{
     task::{Context, Poll},
 };
 
-use futures::{Stream, ready};
+use futures::{Stream, channel::mpsc::Receiver};
 
-use crate::{driver::Driver, sys::OSXSys};
+use crate::{
+    Msg,
+    body::{Body, BodySendersDropHandle, Kind},
+};
 
 /// Asynchronous stream for fetching clipboard item.
 ///
-/// When the clipboard is updated, the [`ClipboardStream`] polls for the yields the new data.  
-/// The return type is `Result<String>`. Other data formats are not **yet** supported.  
+/// When the clipboard is updated, the [`ClipboardStream`] polls for the yields the new data.
+/// The return type is `Result<String>`. Other data formats are not **yet** supported.
 ///
 /// # Example
 /// ```no_run
@@ -30,33 +33,21 @@ use crate::{driver::Driver, sys::OSXSys};
 /// ```
 #[derive(Debug)]
 pub struct ClipboardStream {
-    driver: Driver,
-}
-
-impl ClipboardStream {
-    pub fn new() -> Self {
-        #[cfg(target_os = "macos")]
-        let sys = OSXSys;
-
-        ClipboardStream {
-            driver: Driver::new(sys),
-        }
-    }
-}
-
-impl Default for ClipboardStream {
-    fn default() -> Self {
-        Self::new()
-    }
+    pub(crate) body_rx: Pin<Box<Receiver<Msg>>>,
+    pub(crate) kind: Kind,
+    pub(crate) drop_handle: BodySendersDropHandle,
 }
 
 impl Stream for ClipboardStream {
-    type Item = Result<String, crate::error::Error>;
+    type Item = Result<Body, crate::error::Error>;
 
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
-        match ready!(self.driver.poll_clipboard(cx)) {
-            Ok(v) => Poll::Ready(Some(Ok(v))),
-            Err(e) => Poll::Ready(Some(Err(e))),
-        }
+        self.body_rx.as_mut().poll_next(cx)
+    }
+}
+
+impl Drop for ClipboardStream {
+    fn drop(&mut self) {
+        self.drop_handle.delete_sender(&self.kind);
     }
 }
