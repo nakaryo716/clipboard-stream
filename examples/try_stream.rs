@@ -1,8 +1,8 @@
-use clipboard_stream::{ClipboadEventListener, Kind};
+use clipboard_stream::{ClipboardEventListener, Kind};
 use futures::stream::TryStreamExt;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut event_lisener = ClipboadEventListener::spawn();
+    let mut event_lisener = ClipboardEventListener::spawn();
     let mut stream = event_lisener.new_stream(Kind::Utf8String, 32)?;
 
     let future = async move {
