@@ -11,18 +11,18 @@ use crate::{
 /// Clipboard event change listener.
 ///
 /// Listen for clipboard change events and notifies [`ClipboardStream`].
-pub struct ClipboadEventListener {
+pub struct ClipboardEventListener {
     driver: Option<Driver>,
     body_senders: Arc<Mutex<BodySenders>>,
 }
 
-impl ClipboadEventListener {
-    /// Creates a new [`ClipboadEventListener`] that monitors clipboard changes in a dedicated OS thread.
+impl ClipboardEventListener {
+    /// Creates a new [`ClipboardEventListener`] that monitors clipboard changes in a dedicated OS thread.
     pub fn spawn() -> Self {
         let body_senders = Arc::new(Mutex::new(BodySenders::new()));
 
         let driver = Driver::new(body_senders.clone());
-        ClipboadEventListener {
+        ClipboardEventListener {
             driver: Some(driver),
             body_senders,
         }
@@ -37,10 +37,10 @@ impl ClipboadEventListener {
     ///
     /// # Example
     /// ```
-    /// # use clipboard_stream::{Kind, ClipboadEventListener, ClipboardStream};
+    /// # use clipboard_stream::{Kind, ClipboardEventListener, ClipboardStream};
     /// # #[tokio::main]
     /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    ///     let mut event_listener = ClipboadEventListener::spawn();
+    ///     let mut event_listener = ClipboardEventListener::spawn();
     ///
     ///     let buf_size = 32;
     ///     let stream = event_listener.new_stream(Kind::Utf8String, buf_size)?;
@@ -62,13 +62,13 @@ impl ClipboadEventListener {
     }
 }
 
-impl Default for ClipboadEventListener {
+impl Default for ClipboardEventListener {
     fn default() -> Self {
-        ClipboadEventListener::spawn()
+        ClipboardEventListener::spawn()
     }
 }
 
-impl Drop for ClipboadEventListener {
+impl Drop for ClipboardEventListener {
     fn drop(&mut self) {
         drop(self.driver.take())
     }
