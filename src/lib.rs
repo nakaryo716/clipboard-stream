@@ -2,25 +2,31 @@
 //!
 //! Provides real-time clipboard monitoring through an async [`Stream`] interface.
 //!
-//! The main part of this crate is [`ClipboardSream`].
+//! The main part of this crate is [`ClipboardStream`].
 //! This struct implements [`Stream`].
 //!
 //! # Example
 //! The following example shows how to receive clipboard items:
 //!
 //! ```no_run
-//! use clipboard_stream::ClipboardStream;
+//! use clipboard_stream::{ClipboardEventListener, Kind};
 //! use futures::stream::StreamExt;
 //!
 //! #[tokio::main]
-//! async fn main() {
-//!     let mut stream = ClipboardStream::new();
+//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     // Spawn a clipboard event listener
+//!     let mut event_listener = ClipboardEventListener::spawn();
 //!
-//!     while let Some(item) = stream.next().await {
-//!         if let Ok(v) = item {
-//!             println!("{}", v);
+//!     // Create a new stream for UTF-8 strings
+//!     // This may return `Error::AlreadyExists` if the same kind of stream already exists
+//!     let mut stream = event_listener.new_stream(Kind::Utf8String, 32)?;
+//!
+//!     while let Some(body) = stream.next().await {
+//!         if let Ok(v) = body {
+//!             println!("{:?}", v);
 //!         }
 //!     }
+//!     Ok(())
 //! }
 //! ```
 //!
@@ -36,7 +42,7 @@
 //! Currently supported on **macOS only**. Windows support is planned for a future release.
 //!
 //! [`Stream`]: https://docs.rs/futures/latest/futures/stream/trait.Stream.html
-//! [`ClipboardSream`]: crate::stream::ClipboardStream
+//! [`ClipboardStream`]: crate::stream::ClipboardStream
 mod body;
 mod driver;
 mod error;
