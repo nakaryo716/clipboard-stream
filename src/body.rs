@@ -3,13 +3,20 @@ use std::sync::{Arc, Mutex};
 use futures::channel::mpsc::{Sender, TrySendError};
 
 use crate::{Error, Msg};
+
+/// Various kind of clipboard items.
 #[derive(Debug, Clone)]
 pub enum Body {
+    /// UTF-8 encoded String.
     Utf8String(String),
 }
 
+/// Specifies the kind of [`ClipboardStream`].
+///
+/// [`ClipboardStream`]: crate::ClipboardStream
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Kind {
+    /// UTF-8 encoded String.
     Utf8String,
 }
 
@@ -58,7 +65,7 @@ impl BodySenders {
         }
     }
 
-    /// When specified kind's Sender is Some, send message.  
+    /// When specified kind's Sender is Some, send message.
     pub(crate) fn try_send_if_some(
         &mut self,
         msg: Msg,
