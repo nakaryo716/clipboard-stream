@@ -13,23 +13,19 @@ use crate::{
 /// Asynchronous stream for fetching clipboard item.
 ///
 /// When the clipboard is updated, the [`ClipboardStream`] polls for the yields the new data.
-/// The return type is `Result<String>`. Other data formats are not **yet** supported.
 ///
 /// # Example
-/// ```no_run
-/// use clipboard_stream::ClipboardStream;
-/// use futures::stream::StreamExt;
-///
-/// #[tokio::main]
-/// async fn main() {
-///     let mut stream = ClipboardStream::new();
-///
-///     while let Some(item) = stream.next().await {
-///         if let Ok(v) = item {
-///             println!("{}", v);
-///         }
+/// ```
+/// # use clipboard_stream::{ClipboardStream};
+/// # use futures::stream::StreamExt;
+/// # async fn stream(mut stream: ClipboardStream) {
+/// // stream: ClipboardStream
+/// while let Some(body) = stream.next().await {
+///     if let Ok(v) = body {
+///         println!("{:?}", v);
 ///     }
 /// }
+/// # }
 /// ```
 #[derive(Debug)]
 pub struct ClipboardStream {
