@@ -44,6 +44,6 @@ impl Stream for ClipboardStream {
 
 impl Drop for ClipboardStream {
     fn drop(&mut self) {
-        self.drop_handle.delete_sender(&self.kind);
+        self.drop_handle.drop(&self.kind);
     }
 }
