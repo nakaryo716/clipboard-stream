@@ -101,18 +101,19 @@ fn send_ignore_err(tx: &mut Option<Sender<Msg>>, msg: Msg) {
     }
 }
 
+/// Handler for Cleaning up buffer(channel).
+///
+/// Close channel and unregister a specified kined of sender.
 #[derive(Debug)]
-pub(crate) struct BodySendersDropHandle {
-    handle: Arc<Mutex<BodySenders>>,
-}
+pub(crate) struct BodySendersDropHandle(Arc<Mutex<BodySenders>>);
 
 impl BodySendersDropHandle {
     pub(crate) fn new(senders: Arc<Mutex<BodySenders>>) -> Self {
-        BodySendersDropHandle { handle: senders }
+        BodySendersDropHandle(senders)
     }
 
-    pub(crate) fn delete_sender(&mut self, kind: &Kind) {
-        let mut gurad = self.handle.lock().unwrap();
+    pub(crate) fn drop(&mut self, kind: &Kind) {
+        let mut gurad = self.0.lock().unwrap();
         gurad.unregister(kind);
     }
 }
