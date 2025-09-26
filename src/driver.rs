@@ -10,7 +10,7 @@ use std::{
 use crate::{
     Kind,
     body::{Body, BodySenders},
-    sys::{ClipBoardSys, OSXSys},
+    sys::OSXSys,
 };
 
 /// An event driver that monitors clipboard updates and notify

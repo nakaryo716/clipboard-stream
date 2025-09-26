@@ -3,24 +3,18 @@ use objc2_app_kit::{NSPasteboard, NSPasteboardTypeString};
 
 use crate::error::Error;
 
-/// system call wrapper to know event change and get item
-pub(crate) trait ClipBoardSys {
-    fn get_item(&mut self) -> Result<String, Error>;
-    fn get_change_count(&self) -> Result<i64, Error>;
-}
-
 #[cfg(target_os = "macos")]
 pub(crate) struct OSXSys;
 
 #[cfg(target_os = "macos")]
-impl ClipBoardSys for OSXSys {
-    fn get_change_count(&self) -> Result<i64, Error> {
+impl OSXSys {
+    pub(crate) fn get_change_count(&self) -> Result<i64, Error> {
         let inner = unsafe { NSPasteboard::generalPasteboard() };
         let count = unsafe { inner.changeCount() };
         Ok(count as i64)
     }
 
-    fn get_item(&mut self) -> Result<String, Error> {
+    pub(crate) fn get_item(&mut self) -> Result<String, Error> {
         let item = unsafe {
             let inner = NSPasteboard::generalPasteboard();
             inner.dataForType(NSPasteboardTypeString)
