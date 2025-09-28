@@ -4,14 +4,14 @@ use std::{
         atomic::{AtomicBool, Ordering},
     },
     thread::JoinHandle,
-    time,
 };
 
-use crate::{
-    Kind,
-    body::{Body, BodySenders},
-    sys::OSXSys,
-};
+use crate::{body::BodySenders, driver::observer::Observer};
+
+#[cfg(target_os = "macos")]
+use crate::driver::observer::OSXObserver;
+
+mod observer;
 
 /// An event driver that monitors clipboard updates and notify
 #[derive(Debug)]
@@ -25,46 +25,15 @@ impl Driver {
     pub(crate) fn new(body_senders: Arc<Mutex<BodySenders>>) -> Self {
         let stop = Arc::new(AtomicBool::new(false));
 
+        #[cfg(target_os = "macos")]
         let stop_cl = stop.clone();
+        #[cfg(target_os = "macos")]
+        let observer = OSXObserver::new(stop_cl);
 
+        // spawn OS thread
+        // observe clipboard change event and send item
         let handle = std::thread::spawn(move || {
-            let mut last_count = None;
-
-            let mut sys = OSXSys;
-            while !stop_cl.load(Ordering::Relaxed) {
-                std::thread::sleep(time::Duration::from_millis(200));
-                let change_count = match sys.get_change_count() {
-                    Ok(c) => c,
-                    Err(_) => {
-                        let mut gurad = body_senders.lock().unwrap();
-                        gurad.send_all_if_some(Err(crate::error::Error::GetItem));
-                        continue;
-                    }
-                };
-
-                if Some(change_count) == last_count {
-                    continue;
-                }
-                last_count = Some(change_count);
-
-                match sys.get_item() {
-                    Ok(item) => {
-                        let mut gurad = body_senders.lock().unwrap();
-                        let body = Ok(Body::Utf8String(item));
-                        if let Err(e) = gurad.try_send_if_some(body, &Kind::Utf8String) {
-                            eprintln!("{}", e);
-                        }
-                    }
-                    Err(_) => {
-                        let mut gurad = body_senders.lock().unwrap();
-                        if let Err(e) = gurad
-                            .try_send_if_some(Err(crate::error::Error::GetItem), &Kind::Utf8String)
-                        {
-                            eprintln!("{}", e);
-                        }
-                    }
-                }
-            }
+            observer.observe(body_senders);
         });
 
         Driver {
