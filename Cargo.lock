@@ -58,6 +58,7 @@ name = "clipboard-stream"
 version = "0.2.0"
 dependencies = [
  "futures",
+ "objc2",
  "objc2-app-kit",
  "thiserror",
  "tokio",
