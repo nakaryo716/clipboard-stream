@@ -1,24 +1,29 @@
+#[cfg(target_os = "macos")]
+use objc2::rc::Retained;
 /// System call wrapper module
 use objc2_app_kit::{NSPasteboard, NSPasteboardTypeString};
 
 use crate::error::Error;
 
 #[cfg(target_os = "macos")]
-pub(crate) struct OSXSys;
+pub(crate) struct OSXSys {
+    inner: Retained<NSPasteboard>,
+}
 
 #[cfg(target_os = "macos")]
 impl OSXSys {
-    pub(crate) fn get_change_count(&self) -> Result<i64, Error> {
+    pub(crate) fn new() -> Self {
         let inner = unsafe { NSPasteboard::generalPasteboard() };
-        let count = unsafe { inner.changeCount() };
+        OSXSys { inner }
+    }
+
+    pub(crate) fn get_change_count(&self) -> Result<i64, Error> {
+        let count = unsafe { self.inner.changeCount() };
         Ok(count as i64)
     }
 
-    pub(crate) fn get_item(&mut self) -> Result<String, Error> {
-        let item = unsafe {
-            let inner = NSPasteboard::generalPasteboard();
-            inner.dataForType(NSPasteboardTypeString)
-        };
+    pub(crate) fn get_item(&self) -> Result<String, Error> {
+        let item = unsafe { self.inner.dataForType(NSPasteboardTypeString) };
 
         match item {
             Some(v) => {
