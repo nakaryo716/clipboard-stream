@@ -27,12 +27,17 @@ impl Driver {
 
         #[cfg(target_os = "macos")]
         let stop_cl = stop.clone();
-        #[cfg(target_os = "macos")]
-        let observer = OSXObserver::new(stop_cl);
 
         // spawn OS thread
         // observe clipboard change event and send item
         let handle = std::thread::spawn(move || {
+            // construct Observer in thread
+            // OSXSys is **not** implemented Send + Sync
+            // in order to send Observer, construct it
+            #[cfg(target_os = "macos")]
+            let observer = OSXObserver::new(stop_cl);
+
+            // event change observe loop
             observer.observe(body_senders);
         });
 
