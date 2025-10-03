@@ -20,11 +20,15 @@ pub(super) trait Observer {
 /// Observer for MacOS
 pub(super) struct OSXObserver {
     stop: Arc<AtomicBool>,
+    sys: OSXSys,
 }
 
 impl OSXObserver {
     pub(super) fn new(stop: Arc<AtomicBool>) -> Self {
-        OSXObserver { stop }
+        OSXObserver {
+            stop,
+            sys: OSXSys::new(),
+        }
     }
 }
 
@@ -32,10 +36,9 @@ impl Observer for OSXObserver {
     fn observe(&self, body_senders: Arc<Mutex<BodySenders>>) {
         let mut last_count = None;
 
-        let mut sys = OSXSys;
         while !self.stop.load(Ordering::Relaxed) {
             std::thread::sleep(time::Duration::from_millis(200));
-            let change_count = match sys.get_change_count() {
+            let change_count = match self.sys.get_change_count() {
                 Ok(c) => c,
                 Err(_) => {
                     let mut gurad = body_senders.lock().unwrap();
@@ -49,7 +52,7 @@ impl Observer for OSXObserver {
             }
             last_count = Some(change_count);
 
-            match sys.get_item() {
+            match self.sys.get_item() {
                 Ok(item) => {
                     let mut gurad = body_senders.lock().unwrap();
                     let body = Ok(Body::Utf8String(item));
