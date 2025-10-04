@@ -38,14 +38,7 @@ impl Observer for OSXObserver {
 
         while !self.stop.load(Ordering::Relaxed) {
             std::thread::sleep(time::Duration::from_millis(200));
-            let change_count = match self.sys.get_change_count() {
-                Ok(c) => c,
-                Err(_) => {
-                    let mut gurad = body_senders.lock().unwrap();
-                    gurad.send_all_if_some(Err(crate::error::Error::GetItem));
-                    continue;
-                }
-            };
+            let change_count = self.sys.get_change_count();
 
             if Some(change_count) == last_count {
                 continue;
