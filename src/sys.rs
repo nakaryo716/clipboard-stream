@@ -17,9 +17,8 @@ impl OSXSys {
         OSXSys { inner }
     }
 
-    pub(crate) fn get_change_count(&self) -> Result<i64, Error> {
-        let count = unsafe { self.inner.changeCount() };
-        Ok(count as i64)
+    pub(crate) fn get_change_count(&self) -> isize {
+        unsafe { self.inner.changeCount() }
     }
 
     pub(crate) fn get_item(&self) -> Result<String, Error> {

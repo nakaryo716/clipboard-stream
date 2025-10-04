@@ -77,6 +77,7 @@ impl BodySenders {
         Ok(())
     }
 
+    #[allow(dead_code)]
     /// Send a message to the sender if available.
     /// Errors are logged but do not stop other sends.
     pub(crate) fn send_all_if_some(&mut self, msg: Msg) {
@@ -92,6 +93,7 @@ fn try_send(tx: &mut Option<Sender<Msg>>, msg: Msg) -> Result<(), TrySendError<M
     Ok(())
 }
 
+#[allow(dead_code)]
 #[inline]
 fn send_ignore_err(tx: &mut Option<Sender<Msg>>, msg: Msg) {
     if let Some(v) = tx
