@@ -34,16 +34,16 @@ impl OSXObserver {
 
 impl Observer for OSXObserver {
     fn observe(&self, body_senders: Arc<Mutex<BodySenders>>) {
-        let mut last_count = None;
+        let mut last_count = self.sys.get_change_count();
 
         while !self.stop.load(Ordering::Relaxed) {
             std::thread::sleep(time::Duration::from_millis(200));
             let change_count = self.sys.get_change_count();
 
-            if Some(change_count) == last_count {
+            if change_count == last_count {
                 continue;
             }
-            last_count = Some(change_count);
+            last_count = change_count;
 
             match self.sys.get_item() {
                 Ok(item) => {
