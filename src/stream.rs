@@ -5,10 +5,7 @@ use std::{
 
 use futures::{Stream, channel::mpsc::Receiver};
 
-use crate::{
-    Msg,
-    body::{Body, BodySendersDropHandle, Kind},
-};
+use crate::body::{Body, BodySendersDropHandle};
 
 /// Asynchronous stream for fetching clipboard item.
 ///
@@ -29,13 +26,19 @@ use crate::{
 /// ```
 #[derive(Debug)]
 pub struct ClipboardStream {
-    pub(crate) body_rx: Pin<Box<Receiver<Msg>>>,
-    pub(crate) kind: Kind,
+    pub(crate) id: StreamId,
+    pub(crate) body_rx: Pin<Box<Receiver<Body>>>,
     pub(crate) drop_handle: BodySendersDropHandle,
 }
 
+impl ClipboardStream {
+    pub fn id(&self) -> &StreamId {
+        &self.id
+    }
+}
+
 impl Stream for ClipboardStream {
-    type Item = Result<Body, crate::error::Error>;
+    type Item = Body;
 
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         self.body_rx.as_mut().poll_next(cx)
@@ -44,6 +47,20 @@ impl Stream for ClipboardStream {
 
 impl Drop for ClipboardStream {
     fn drop(&mut self) {
-        self.drop_handle.drop(&self.kind);
+        self.body_rx.close();
+        // drain messages inner channel
+        loop {
+            match self.body_rx.try_next() {
+                Ok(Some(_)) => {}
+                Ok(None) => break,
+                Err(_) => continue,
+            }
+        }
+
+        // remove Sender from HashMap
+        self.drop_handle.drop(&self.id);
     }
 }
+
+#[derive(Debug, Clone, Eq, Hash, PartialEq)]
+pub struct StreamId(pub(crate) usize);

@@ -1,6 +1,6 @@
 use std::{
     sync::{
-        Arc, Mutex,
+        Arc,
         atomic::{AtomicBool, Ordering},
     },
     thread::JoinHandle,
@@ -22,7 +22,7 @@ pub(crate) struct Driver {
 
 impl Driver {
     /// Construct [`Driver`] and spawn a thread for monitoring clipboard events
-    pub(crate) fn new(body_senders: Arc<Mutex<BodySenders>>) -> Self {
+    pub(crate) fn new(body_senders: Arc<BodySenders>) -> Self {
         let stop = Arc::new(AtomicBool::new(false));
 
         #[cfg(target_os = "macos")]

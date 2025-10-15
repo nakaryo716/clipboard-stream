@@ -1,20 +1,19 @@
 use std::{
     sync::{
-        Arc, Mutex,
+        Arc,
         atomic::{AtomicBool, Ordering},
     },
     time,
 };
 
 use crate::{
-    Kind,
     body::{Body, BodySenders},
     sys::OSXSys,
 };
 
 /// A trait observing clipboard change event and send data to receiver([`ClipboardStream`])
 pub(super) trait Observer {
-    fn observe(&self, body_senders: Arc<Mutex<BodySenders>>);
+    fn observe(&self, body_senders: Arc<BodySenders>);
 }
 
 /// Observer for MacOS
@@ -33,7 +32,7 @@ impl OSXObserver {
 }
 
 impl Observer for OSXObserver {
-    fn observe(&self, body_senders: Arc<Mutex<BodySenders>>) {
+    fn observe(&self, body_senders: Arc<BodySenders>) {
         let mut last_count = self.sys.get_change_count();
 
         while !self.stop.load(Ordering::Relaxed) {
@@ -45,22 +44,8 @@ impl Observer for OSXObserver {
             }
             last_count = change_count;
 
-            match self.sys.get_item() {
-                Ok(item) => {
-                    let mut gurad = body_senders.lock().unwrap();
-                    let body = Ok(Body::Utf8String(item));
-                    if let Err(e) = gurad.try_send_if_some(body, &Kind::Utf8String) {
-                        eprintln!("{}", e);
-                    }
-                }
-                Err(_) => {
-                    let mut gurad = body_senders.lock().unwrap();
-                    if let Err(e) =
-                        gurad.try_send_if_some(Err(crate::error::Error::GetItem), &Kind::Utf8String)
-                    {
-                        eprintln!("{}", e);
-                    }
-                }
+            if let Ok(item) = self.sys.get_item() {
+                body_senders.send_all(Body::Utf8String(item));
             }
         }
     }

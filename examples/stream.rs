@@ -1,17 +1,16 @@
-use clipboard_stream::{Body, ClipboardEventListener, Kind};
+use clipboard_stream::{Body, ClipboardEventListener};
 use futures::StreamExt;
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
     let mut event_listener = ClipboardEventListener::spawn();
-    let mut stream = event_listener.new_stream(Kind::Utf8String, 32).unwrap();
+    let mut stream = event_listener.new_stream(32);
 
     while let Some(content) = stream.next().await {
         match content {
-            Ok(v) => match v {
-                Body::Utf8String(v) => println!("got string: {}", v),
-            },
-            Err(e) => eprintln!("{}", e),
+            Body::Utf8String(text) => {
+                println!("got string: {}", text);
+            }
         }
     }
 }
