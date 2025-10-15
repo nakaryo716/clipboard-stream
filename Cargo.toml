@@ -28,7 +28,3 @@ futures = { version = "0.3", features = ["executor"] }
 [[example]]
 name = "stream"
 path = "examples/stream.rs"
-
-[[example]]
-name = "try-stream"
-path = "examples/try_stream.rs"
