@@ -1,8 +1,11 @@
-use std::sync::{Arc, Mutex};
+use std::{
+    collections::HashMap,
+    sync::{Arc, Mutex},
+};
 
-use futures::channel::mpsc::{Sender, TrySendError};
+use futures::channel::mpsc::Sender;
 
-use crate::{Error, Msg};
+use crate::stream::StreamId;
 
 /// Various kind of clipboard items.
 #[derive(Debug, Clone)]
@@ -22,84 +25,37 @@ pub enum Kind {
 
 #[derive(Debug)]
 pub(crate) struct BodySenders {
-    utf8_string_tx: Option<Sender<Msg>>,
+    senders: Mutex<HashMap<StreamId, Sender<Body>>>,
 }
 
 impl BodySenders {
     pub(crate) fn new() -> Self {
         BodySenders {
-            utf8_string_tx: None,
+            senders: Mutex::default(),
         }
     }
 
     /// Register Sender that was specified kind. If, sender already exists, return Err(Error::StreamAlreadyExists).
-    pub(crate) fn register(&mut self, tx: Sender<Msg>, kind: &Kind) -> Result<(), Error> {
-        if self.is_some(kind) {
-            return Err(Error::StreamAlreadyExists);
-        }
-
-        match kind {
-            Kind::Utf8String => self.utf8_string_tx = Some(tx),
-        }
-
-        Ok(())
-    }
-
-    fn is_some(&self, kind: &Kind) -> bool {
-        match kind {
-            Kind::Utf8String => self.utf8_string_tx.is_some(),
-        }
+    pub(crate) fn register(&self, id: StreamId, tx: Sender<Body>) {
+        let mut gurad = self.senders.lock().unwrap();
+        gurad.insert(id, tx);
     }
 
     /// Close channel and unregister sender that was specified kind
-    fn unregister(&mut self, kind: &Kind) {
-        match kind {
-            Kind::Utf8String => {
-                if let Some(ref mut v) = self.utf8_string_tx {
-                    if !v.is_closed() {
-                        v.close_channel();
-                    }
-                    self.utf8_string_tx = None;
-                }
+    fn unregister(&self, id: &StreamId) {
+        let mut gurad = self.senders.lock().unwrap();
+        gurad.remove(id);
+    }
+
+    pub(crate) fn send_all(&self, body: Body) {
+        let mut senders = self.senders.lock().unwrap();
+
+        for sender in senders.values_mut() {
+            let body_c = body.clone();
+            if let Err(e) = sender.try_send(body_c) {
+                eprintln!("{}", e);
             }
         }
-    }
-
-    /// When specified kind's Sender is Some, send message.
-    pub(crate) fn try_send_if_some(
-        &mut self,
-        msg: Msg,
-        kind: &Kind,
-    ) -> Result<(), TrySendError<Msg>> {
-        match kind {
-            Kind::Utf8String => try_send(&mut self.utf8_string_tx, msg)?,
-        }
-        Ok(())
-    }
-
-    #[allow(dead_code)]
-    /// Send a message to the sender if available.
-    /// Errors are logged but do not stop other sends.
-    pub(crate) fn send_all_if_some(&mut self, msg: Msg) {
-        send_ignore_err(&mut self.utf8_string_tx, msg);
-    }
-}
-
-#[inline]
-fn try_send(tx: &mut Option<Sender<Msg>>, msg: Msg) -> Result<(), TrySendError<Msg>> {
-    if let Some(v) = tx {
-        v.try_send(msg)?
-    }
-    Ok(())
-}
-
-#[allow(dead_code)]
-#[inline]
-fn send_ignore_err(tx: &mut Option<Sender<Msg>>, msg: Msg) {
-    if let Some(v) = tx
-        && let Err(e) = v.try_send(msg)
-    {
-        eprintln!("{}", e);
     }
 }
 
@@ -107,15 +63,14 @@ fn send_ignore_err(tx: &mut Option<Sender<Msg>>, msg: Msg) {
 ///
 /// Close channel and unregister a specified kined of sender.
 #[derive(Debug)]
-pub(crate) struct BodySendersDropHandle(Arc<Mutex<BodySenders>>);
+pub(crate) struct BodySendersDropHandle(Arc<BodySenders>);
 
 impl BodySendersDropHandle {
-    pub(crate) fn new(senders: Arc<Mutex<BodySenders>>) -> Self {
+    pub(crate) fn new(senders: Arc<BodySenders>) -> Self {
         BodySendersDropHandle(senders)
     }
 
-    pub(crate) fn drop(&mut self, kind: &Kind) {
-        let mut gurad = self.0.lock().unwrap();
-        gurad.unregister(kind);
+    pub(crate) fn drop(&self, id: &StreamId) {
+        self.0.unregister(id);
     }
 }

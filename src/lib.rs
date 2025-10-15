@@ -54,5 +54,3 @@ pub use crate::body::{Body, Kind};
 pub use crate::error::Error;
 pub use crate::event_listener::ClipboardEventListener;
 pub use crate::stream::ClipboardStream;
-
-pub(crate) type Msg = Result<Body, crate::error::Error>;
