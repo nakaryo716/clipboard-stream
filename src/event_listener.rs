@@ -43,14 +43,13 @@ impl ClipboardEventListener {
     ///
     /// # Example
     /// ```
-    /// # use clipboard_stream::{Kind, ClipboardEventListener, ClipboardStream};
+    /// # use clipboard_stream::{Body, ClipboardEventListener, ClipboardStream};
     /// # #[tokio::main]
-    /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// # async fn main() {
     ///     let mut event_listener = ClipboardEventListener::spawn();
     ///
     ///     let buf_size = 32;
-    ///     let stream = event_listener.new_stream(Kind::Utf8String, buf_size)?;
-    /// #   Ok(())
+    ///     let stream = event_listener.new_stream(buf_size);
     /// # }
     /// ```
     /// [`Body`]: crate::Body

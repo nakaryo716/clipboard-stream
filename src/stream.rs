@@ -13,13 +13,13 @@ use crate::body::{Body, BodySendersDropHandle};
 ///
 /// # Example
 /// ```
-/// # use clipboard_stream::{ClipboardStream};
+/// # use clipboard_stream::{Body, ClipboardStream};
 /// # use futures::stream::StreamExt;
 /// # async fn stream(mut stream: ClipboardStream) {
 /// // stream: ClipboardStream
 /// while let Some(body) = stream.next().await {
-///     if let Ok(v) = body {
-///         println!("{:?}", v);
+///     if let Body::Utf8String(text) = body {
+///         println!("{}", text);
 ///     }
 /// }
 /// # }
