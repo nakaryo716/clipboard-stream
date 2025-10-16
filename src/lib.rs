@@ -17,7 +17,7 @@
 //!     // Spawn a clipboard event listener
 //!     let mut event_listener = ClipboardEventListener::spawn();
 //!
-//!     // Create a new stream for
+//!     // Create a new stream
 //!     let mut stream = event_listener.new_stream(32);
 //!
 //!     while let Some(body) = stream.next().await {
