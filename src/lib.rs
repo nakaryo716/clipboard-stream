@@ -9,24 +9,23 @@
 //! The following example shows how to receive clipboard items:
 //!
 //! ```no_run
-//! use clipboard_stream::{ClipboardEventListener, Kind};
+//! use clipboard_stream::{ClipboardEventListener, Body};
 //! use futures::stream::StreamExt;
 //!
 //! #[tokio::main]
-//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! async fn main() {
 //!     // Spawn a clipboard event listener
 //!     let mut event_listener = ClipboardEventListener::spawn();
 //!
 //!     // Create a new stream for UTF-8 strings
 //!     // This may return `Error::AlreadyExists` if the same kind of stream already exists
-//!     let mut stream = event_listener.new_stream(Kind::Utf8String, 32)?;
+//!     let mut stream = event_listener.new_stream(32);
 //!
 //!     while let Some(body) = stream.next().await {
-//!         if let Ok(v) = body {
-//!             println!("{:?}", v);
+//!         if let Body::Utf8String(text) = body {
+//!             println!("{}", text);
 //!         }
 //!     }
-//!     Ok(())
 //! }
 //! ```
 //!
