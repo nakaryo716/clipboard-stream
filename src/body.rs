@@ -35,7 +35,7 @@ impl BodySenders {
         }
     }
 
-    /// Register Sender that was specified kind. If, sender already exists, return Err(Error::StreamAlreadyExists).
+    /// Register Sender that was specified kind.
     pub(crate) fn register(&self, id: StreamId, tx: Sender<Body>) {
         let mut gurad = self.senders.lock().unwrap();
         gurad.insert(id, tx);

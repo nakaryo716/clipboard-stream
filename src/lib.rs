@@ -17,8 +17,7 @@
 //!     // Spawn a clipboard event listener
 //!     let mut event_listener = ClipboardEventListener::spawn();
 //!
-//!     // Create a new stream for UTF-8 strings
-//!     // This may return `Error::AlreadyExists` if the same kind of stream already exists
+//!     // Create a new stream
 //!     let mut stream = event_listener.new_stream(32);
 //!
 //!     while let Some(body) = stream.next().await {
