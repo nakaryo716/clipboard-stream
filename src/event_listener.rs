@@ -34,7 +34,6 @@ impl ClipboardEventListener {
         }
     }
     /// Creates a [`ClipboardStream`] for receiving clipboard change items as [`Body`].
-    /// If a stream for the same [`Kind`] already exists, returns [`Error::StreamAlreadyExists`].
     ///
     /// # Buffer size
     /// This method takes a buffer size. Items are buffered when not received immediately.
