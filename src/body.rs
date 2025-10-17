@@ -35,13 +35,13 @@ impl BodySenders {
         }
     }
 
-    /// Register Sender that was specified kind.
+    /// Register Sender that was specified [`StreamId`].
     pub(crate) fn register(&self, id: StreamId, tx: Sender<Body>) {
         let mut gurad = self.senders.lock().unwrap();
         gurad.insert(id, tx);
     }
 
-    /// Close channel and unregister sender that was specified kind
+    /// Close channel and unregister sender that was specified [`StreamId`]
     fn unregister(&self, id: &StreamId) {
         let mut gurad = self.senders.lock().unwrap();
         gurad.remove(id);
@@ -61,7 +61,7 @@ impl BodySenders {
 
 /// Handler for Cleaning up buffer(channel).
 ///
-/// Close channel and unregister a specified kined of sender.
+/// Close channel and unregister a specified [`StreamId`] of sender.
 #[derive(Debug)]
 pub(crate) struct BodySendersDropHandle(Arc<BodySenders>);
 
