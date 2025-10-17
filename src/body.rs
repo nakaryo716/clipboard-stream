@@ -14,15 +14,6 @@ pub enum Body {
     Utf8String(String),
 }
 
-/// Specifies the kind of [`ClipboardStream`].
-///
-/// [`ClipboardStream`]: crate::ClipboardStream
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Kind {
-    /// UTF-8 encoded String.
-    Utf8String,
-}
-
 #[derive(Debug)]
 pub(crate) struct BodySenders {
     senders: Mutex<HashMap<StreamId, Sender<Body>>>,
