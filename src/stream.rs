@@ -62,5 +62,6 @@ impl Drop for ClipboardStream {
     }
 }
 
+/// An Id to specify the [`ClipboardStream`].
 #[derive(Debug, Clone, Eq, Hash, PartialEq)]
 pub struct StreamId(pub(crate) usize);
