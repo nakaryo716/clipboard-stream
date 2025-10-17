@@ -11,25 +11,22 @@ The main part of this crate is ClipboardStream. This struct implements Stream Tr
 ## Example
 The following example shows how to receive clipboard items:
 ```rust
-use clipboard_stream::{Body, ClipboardEventListener, Kind};
+use clipboard_stream::{Body, ClipboardEventListener};
 use futures::StreamExt;
 
 #[tokio::main]
 async fn main() {
     // Spawn a clipboard event listener
     let mut event_listener = ClipboardEventListener::spawn();
-
-    // Create a new stream for UTF-8 strings with 32 buffers
-    // This may return `Error::AlreadyExists` if the same kind of stream already exists
-    let mut stream = event_listener.new_stream(Kind::Utf8String, 32).unwrap();
+    // Create a ClipboardStream with buffer
+    let mut stream = event_listener.new_stream(32);
 
     // Text is printed when the clipboard is updated(Copy operation)
     while let Some(content) = stream.next().await {
         match content {
-            Ok(v) => match v {
-                Body::Utf8String(v) => println!("got string: {}", v),
-            },
-            Err(e) => eprintln!("{}", e),
+            Body::Utf8String(text) => {
+                println!("got string: {}", text);
+            }
         }
     }
 }
