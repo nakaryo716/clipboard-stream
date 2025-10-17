@@ -48,7 +48,7 @@ mod event_listener;
 mod stream;
 mod sys;
 
-pub use crate::body::{Body, Kind};
+pub use crate::body::Body;
 pub use crate::error::Error;
 pub use crate::event_listener::ClipboardEventListener;
 pub use crate::stream::{ClipboardStream, StreamId};
