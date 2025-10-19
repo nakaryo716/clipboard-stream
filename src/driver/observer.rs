@@ -6,10 +6,7 @@ use std::{
     time,
 };
 
-use crate::{
-    body::{Body, BodySenders},
-    sys::OSXSys,
-};
+use crate::{body::BodySenders, sys::OSXSys};
 
 /// A trait observing clipboard change event and send data to receiver([`ClipboardStream`])
 pub(super) trait Observer {
@@ -44,9 +41,10 @@ impl Observer for OSXObserver {
             }
             last_count = change_count;
 
-            if let Ok(item) = self.sys.get_item() {
-                body_senders.send_all(Body::Utf8String(item));
-            }
+            self.sys
+                .get_bodies()
+                .into_iter()
+                .for_each(|body| body_senders.send_all(body));
         }
     }
 }

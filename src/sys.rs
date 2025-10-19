@@ -3,7 +3,7 @@ use objc2::rc::Retained;
 /// System call wrapper module
 use objc2_app_kit::{NSPasteboard, NSPasteboardTypeString};
 
-use crate::error::Error;
+use crate::Body;
 
 #[cfg(target_os = "macos")]
 pub(crate) struct OSXSys {
@@ -21,16 +21,22 @@ impl OSXSys {
         unsafe { self.inner.changeCount() }
     }
 
-    pub(crate) fn get_item(&self) -> Result<String, Error> {
-        let item = unsafe { self.inner.dataForType(NSPasteboardTypeString) };
+    pub(crate) fn get_bodies(&self) -> Vec<Body> {
+        // the reason of capacity size is number of kind 'Body'
+        let mut bodies = Vec::with_capacity(1);
 
-        match item {
-            Some(v) => {
-                let data = v.to_vec();
-                let text = String::from_utf8(data).map_err(Error::FromUtf8Error)?;
-                Ok(text)
+        // get Utf8String body type
+        let string_data = unsafe { self.inner.dataForType(NSPasteboardTypeString) };
+
+        // construct String if data is some
+        if let Some(v) = string_data {
+            let bytes = v.to_vec();
+            // if String::from_utf8 is failed, we don't push.
+            if let Ok(text) = String::from_utf8(bytes) {
+                bodies.push(Body::Utf8String(text));
             }
-            None => Err(Error::GetItem),
         }
+
+        bodies
     }
 }
