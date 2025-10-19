@@ -32,7 +32,7 @@ impl OSXSys {
         if let Some(v) = string_data {
             let bytes = v.to_vec();
             // if String::from_utf8 is failed, we don't push.
-            if let Some(text) = String::from_utf8(bytes).ok() {
+            if let Ok(text) = String::from_utf8(bytes) {
                 bodies.push(Body::Utf8String(text));
             }
         }
