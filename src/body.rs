@@ -8,10 +8,15 @@ use futures::channel::mpsc::Sender;
 use crate::stream::StreamId;
 
 /// Various kind of clipboard items.
+///
+/// The supporeted body is depend on OS. Check platform tab you use.
 #[derive(Debug, Clone)]
 pub enum Body {
     /// UTF-8 encoded String.
     Utf8String(String),
+    /// PNG type.
+    #[cfg(target_os = "macos")]
+    PNG(Vec<u8>),
 }
 
 #[derive(Debug)]

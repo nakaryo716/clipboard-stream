@@ -1,7 +1,7 @@
 #[cfg(target_os = "macos")]
 use objc2::rc::Retained;
 /// System call wrapper module
-use objc2_app_kit::{NSPasteboard, NSPasteboardTypeString};
+use objc2_app_kit::{NSPasteboard, NSPasteboardTypePNG, NSPasteboardTypeString};
 
 use crate::Body;
 
@@ -37,6 +37,11 @@ impl OSXSys {
             }
         }
 
+        // get PNG image data
+        let png_data = unsafe { self.inner.dataForType(NSPasteboardTypePNG) };
+        if let Some(v) = png_data {
+            bodies.push(Body::PNG(v.to_vec()))
+        }
         bodies
     }
 }
