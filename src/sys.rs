@@ -1,6 +1,8 @@
+/// System call wrapper module
+
 #[cfg(target_os = "macos")]
 use objc2::rc::Retained;
-/// System call wrapper module
+#[cfg(target_os = "macos")]
 use objc2_app_kit::{NSPasteboard, NSPasteboardTypePNG, NSPasteboardTypeString};
 
 use crate::{Body, MimeType};
