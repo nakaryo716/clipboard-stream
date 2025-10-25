@@ -14,7 +14,6 @@ async fn main() {
             Body::Utf8String(text) => {
                 println!("got string: {}", text);
             }
-            #[cfg(target_os = "macos")]
             Body::Image {
                 mime: mime_type,
                 data: v,
