@@ -54,7 +54,7 @@ async fn main() {
 }
 ```
 
-# Body types
+## Body types
 In this library, we can handle thses body types.  
 - text
 - image
