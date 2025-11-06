@@ -39,7 +39,6 @@ async fn main() {
             } => {
                 println!("got: {:?}", mime_type);
                 let cc = count.clone();
-                // create png image file
                 tokio::task::spawn(async move {
                     if mime_type == MimeType::ImagePng {
                         let num = cc.fetch_add(1, Ordering::SeqCst);
