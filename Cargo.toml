@@ -21,7 +21,7 @@ objc2 = "0.6.2"
 objc2-app-kit = "0.3"
 
 [dev-dependencies]
-tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros"] }
+tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros", "fs", "io-util"] }
 futures = { version = "0.3", features = ["executor"] }
 
 [[example]]
