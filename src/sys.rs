@@ -1,4 +1,4 @@
-/// System call wrapper module
+//! System call wrapper module
 
 #[cfg(target_os = "macos")]
 use objc2::rc::Retained;
