@@ -6,7 +6,9 @@ use std::{
     thread::JoinHandle,
 };
 
-use crate::{body::BodySenders, driver::observer::Observer};
+use futures::channel::mpsc::Sender;
+
+use crate::{Body, driver::observer::Observer};
 
 #[cfg(target_os = "macos")]
 use crate::driver::observer::OSXObserver;
@@ -22,7 +24,7 @@ pub(crate) struct Driver {
 
 impl Driver {
     /// Construct [`Driver`] and spawn a thread for monitoring clipboard events
-    pub(crate) fn new(body_senders: Arc<BodySenders>) -> Self {
+    pub(crate) fn new(body_senders: Sender<Body>) -> Self {
         let stop = Arc::new(AtomicBool::new(false));
 
         #[cfg(target_os = "macos")]
