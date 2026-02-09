@@ -22,8 +22,8 @@ use std::sync::{
 
 #[tokio::main]
 async fn main() {
-    let mut event_listener = ClipboardEventListener::spawn();
-    let mut stream = event_listener.new_stream(32);
+    let event_listener = ClipboardEventListener::spawn();
+    let mut stream = event_listener.new_stream();
     let count = Arc::new(AtomicU32::new(0));
 
     while let Some(content) = stream.next().await {
@@ -55,7 +55,7 @@ async fn main() {
 ```
 
 ## Body types
-In this library, we can handle thses body types.  
+In this library, we can handle thses body types.
 - text
 - image
 

@@ -17,8 +17,8 @@
 //!
 //! #[tokio::main]
 //! async fn main() {
-//!     let mut event_listener = ClipboardEventListener::spawn();
-//!     let mut stream = event_listener.new_stream(32);
+//!     let event_listener = ClipboardEventListener::spawn();
+//!     let mut stream = event_listener.new_stream();
 //!     let count = Arc::new(AtomicU32::new(0));
 //!
 //!     while let Some(content) = stream.next().await {
@@ -75,4 +75,4 @@ mod sys;
 
 pub use crate::body::{Body, MimeType};
 pub use crate::event_listener::ClipboardEventListener;
-pub use crate::stream::{ClipboardStream, StreamId};
+pub use crate::stream::ClipboardStream;

@@ -6,11 +6,13 @@ use std::{
     time,
 };
 
-use crate::{body::BodySenders, sys::OSXSys};
+use futures::channel::mpsc::Sender;
+
+use crate::{Body, sys::OSXSys};
 
 /// A trait observing clipboard change event and send data to receiver([`ClipboardStream`])
 pub(super) trait Observer {
-    fn observe(&self, body_senders: Arc<BodySenders>);
+    fn observe(&self, body_senders: Sender<Body>);
 }
 
 /// Observer for MacOS
@@ -29,7 +31,7 @@ impl OSXObserver {
 }
 
 impl Observer for OSXObserver {
-    fn observe(&self, body_senders: Arc<BodySenders>) {
+    fn observe(&self, mut tx: Sender<Body>) {
         let mut last_count = self.sys.get_change_count();
 
         while !self.stop.load(Ordering::Relaxed) {
@@ -41,10 +43,11 @@ impl Observer for OSXObserver {
             }
             last_count = change_count;
 
-            self.sys
-                .get_bodies()
-                .into_iter()
-                .for_each(|body| body_senders.send_all(body));
+            self.sys.get_bodies().into_iter().for_each(|body| {
+                if let Err(e) = tx.try_send(body) {
+                    eprintln!("{}", e);
+                }
+            });
         }
     }
 }

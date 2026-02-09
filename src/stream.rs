@@ -5,7 +5,7 @@ use std::{
 
 use futures::{Stream, channel::mpsc::Receiver};
 
-use crate::body::{Body, BodySendersDropHandle};
+use crate::{body::Body, driver::Driver};
 
 /// Asynchronous stream for fetching clipboard item.
 ///
@@ -26,15 +26,8 @@ use crate::body::{Body, BodySendersDropHandle};
 /// ```
 #[derive(Debug)]
 pub struct ClipboardStream {
-    pub(crate) id: StreamId,
     pub(crate) body_rx: Pin<Box<Receiver<Body>>>,
-    pub(crate) drop_handle: BodySendersDropHandle,
-}
-
-impl ClipboardStream {
-    pub fn id(&self) -> &StreamId {
-        &self.id
-    }
+    pub(crate) driver: Driver,
 }
 
 impl Stream for ClipboardStream {
@@ -57,11 +50,6 @@ impl Drop for ClipboardStream {
             }
         }
 
-        // remove Sender from HashMap
-        self.drop_handle.drop(&self.id);
+        let _ = &mut self.driver;
     }
 }
-
-/// An Id to specify the [`ClipboardStream`].
-#[derive(Debug, Clone, Eq, Hash, PartialEq)]
-pub struct StreamId(pub(crate) usize);
