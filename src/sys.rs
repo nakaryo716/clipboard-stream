@@ -23,10 +23,7 @@ impl OSXSys {
         unsafe { self.inner.changeCount() }
     }
 
-    pub(crate) fn get_bodies(&self) -> Vec<Body> {
-        // the reason of capacity size is number of kind 'Body'
-        let mut bodies = Vec::with_capacity(1);
-
+    pub(crate) fn get_body(&self) -> Option<Body> {
         // get Utf8String body type
         let string_data = unsafe { self.inner.dataForType(NSPasteboardTypeString) };
 
@@ -35,18 +32,20 @@ impl OSXSys {
             let bytes = v.to_vec();
             // if String::from_utf8 is failed, we don't push.
             if let Ok(text) = String::from_utf8(bytes) {
-                bodies.push(Body::Utf8String(text));
+                return Some(Body::Utf8String(text));
             }
         }
 
         // get PNG image data
         let png_data = unsafe { self.inner.dataForType(NSPasteboardTypePNG) };
         if let Some(v) = png_data {
-            bodies.push(Body::Image {
+            return Some(Body::Image {
                 mime: MimeType::ImagePng,
                 data: v.to_vec(),
-            })
+            });
         }
-        bodies
+
+        // when unhandled data type copied, return None
+        None
     }
 }
