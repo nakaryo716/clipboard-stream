@@ -43,11 +43,11 @@ impl Observer for OSXObserver {
             }
             last_count = change_count;
 
-            self.sys.get_bodies().into_iter().for_each(|body| {
-                if let Err(e) = tx.try_send(body) {
-                    eprintln!("{}", e);
-                }
-            });
+            if let Some(body) = self.sys.get_body()
+                && let Err(e) = tx.try_send(body)
+            {
+                eprintln!("{}", e);
+            }
         }
     }
 }
