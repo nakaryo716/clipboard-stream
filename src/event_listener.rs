@@ -12,8 +12,11 @@ pub struct ClipboardEventListener {
 
 impl ClipboardEventListener {
     /// Creates a new [`ClipboardEventListener`] that monitors clipboard changes in a dedicated OS thread.
-    pub fn spawn() -> Self {
-        let (tx, rx) = mpsc::channel(32);
+    ///
+    /// Clipboard Item is  bounded, this EventListener provides backpressure.
+    /// `buffer` specify this size.
+    pub fn spawn(buffer: usize) -> Self {
+        let (tx, rx) = mpsc::channel(buffer);
 
         ClipboardEventListener {
             driver: Driver::new(tx),

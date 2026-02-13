@@ -9,7 +9,7 @@ use std::sync::{
 
 #[tokio::main]
 async fn main() {
-    let event_listener = ClipboardEventListener::spawn();
+    let event_listener = ClipboardEventListener::spawn(32);
     let mut stream = event_listener.new_stream();
     let count = Arc::new(AtomicU32::new(0));
 
