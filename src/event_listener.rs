@@ -13,8 +13,13 @@ pub struct ClipboardEventListener {
 impl ClipboardEventListener {
     /// Creates a new [`ClipboardEventListener`] that monitors clipboard changes in a dedicated OS thread.
     ///
+    /// # Buffer size
     /// Clipboard Item is  bounded, this EventListener provides backpressure.
-    /// `buffer` specify this size.
+    /// `buffer` specify this size.  
+    /// Actualy, the buffer size is equal to `buffer + 1`.
+    /// # Behavior when the buffer is full
+    /// Once buffer is full, new body that is copied will be **ignored**.  
+    /// Dose **not** block, dose **not** retry, and dose **not** signal an error.
     pub fn spawn(buffer: usize) -> Self {
         let (tx, rx) = mpsc::channel(buffer);
 

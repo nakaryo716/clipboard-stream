@@ -43,10 +43,20 @@ impl Observer for OSXObserver {
             }
             last_count = change_count;
 
-            if let Some(body) = self.sys.get_body()
-                && let Err(e) = tx.try_send(body)
-            {
-                eprintln!("{}", e);
+            if let Some(body) = self.sys.get_body() {
+                // ignore error
+                // there are two cases try_send failed
+                //
+                // case1: channel is closed
+                // this is occure when ClipboardStream is droped
+                // so we don't have to send data
+                // Additionaly, when ClipboardStream is droped
+                // self.stop will be true and get out loop
+                //
+                // case2: channel is full
+                // we ignore this error and not blocking
+                // also, not attempt retry
+                let _ = tx.try_send(body);
             }
         }
     }
